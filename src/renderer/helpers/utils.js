@@ -105,57 +105,28 @@ export function calculatePublishedDate(publishedText, isLive = false, isUpcoming
  */
 export function buildVTTFileLocally(storyboard, videoLengthSeconds) {
   let vttString = 'WEBVTT\n\n'
-  // how many images are in one image
-  const numberOfSubImagesPerImage = storyboard.columns * storyboard.rows
-  // the number of storyboard images
-  const numberOfImages = Math.ceil(storyboard.thumbnail_count / numberOfSubImagesPerImage)
-  let intervalInSeconds
-  if (storyboard.interval > 0) {
-    intervalInSeconds = storyboard.interval / 1000
-  } else {
-    intervalInSeconds = videoLengthSeconds / (numberOfImages * numberOfSubImagesPerImage)
+  const cols = storyboard.columns
+  const rows = storyboard.rows
+  const thumbW = storyboard.thumbnail_width
+  const thumbH = storyboard.thumbnail_height
+  const totalTiles = storyboard.thumbnail_count
+  const interval = storyboard.interval > 0 ? (storyboard.interval / 1000) : (videoLengthSeconds / totalTiles)
+
+  function formatTime(t) {
+    const h = Math.floor(t / 3600)
+    const m = Math.floor((t % 3600) / 60)
+    const s = (t % 60).toFixed(3)
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(6, '0')}`
   }
-  let startHours = 0
-  let startMinutes = 0
-  let startSeconds = 0
-  let endHours = 0
-  let endMinutes = 0
-  let endSeconds = intervalInSeconds
-  for (let i = 0; i < numberOfImages; i++) {
-    const currentUrl = storyboard.template_url.replace('$M.jpg', `${i}.jpg`)
-    let xCoord = 0
-    let yCoord = 0
-    for (let j = 0; j < numberOfSubImagesPerImage; j++) {
-      // add the timestamp information
-      const paddedStartHours = startHours.toString().padStart(2, '0')
-      const paddedStartMinutes = startMinutes.toString().padStart(2, '0')
-      const paddedStartSeconds = startSeconds.toFixed(3).padStart(6, '0')
-      const paddedEndHours = endHours.toString().padStart(2, '0')
-      const paddedEndMinutes = endMinutes.toString().padStart(2, '0')
-      const paddedEndSeconds = endSeconds.toFixed(3).padStart(6, '0')
-      vttString += `${paddedStartHours}:${paddedStartMinutes}:${paddedStartSeconds} --> ${paddedEndHours}:${paddedEndMinutes}:${paddedEndSeconds}\n`
-      // add the current image url as well as the x, y, width, height information
-      vttString += `${currentUrl}#xywh=${xCoord},${yCoord},${storyboard.thumbnail_width},${storyboard.thumbnail_height}\n\n`
-      // update the variables
-      startHours = endHours
-      startMinutes = endMinutes
-      startSeconds = endSeconds
-      endSeconds += intervalInSeconds
-      if (endSeconds >= 60) {
-        endSeconds -= 60
-        endMinutes += 1
-      }
-      if (endMinutes >= 60) {
-        endMinutes -= 60
-        endHours += 1
-      }
-      // x coordinate can only be smaller than the width of one subimage * the number of subimages per row
-      xCoord = (xCoord + storyboard.thumbnail_width) % (storyboard.thumbnail_width * storyboard.columns)
-      // only if the x coordinate is , so in a new row, we have to update the y coordinate
-      if (xCoord === 0) {
-        yCoord += storyboard.thumbnail_height
-      }
-    }
+
+  for (let idx = 0; idx < totalTiles; idx++) {
+    const url = storyboard.template_url.replace('$M.jpg', `${Math.floor(idx / (cols * rows))}.jpg`)
+    const start = idx * interval
+    const end = Math.min((idx + 1) * interval, videoLengthSeconds)
+    const x = (idx % cols) * thumbW
+    const y = Math.floor((idx % (cols * rows)) / cols) * thumbH
+    vttString += `${formatTime(start)} --> ${formatTime(end)}\n`
+    vttString += `${url}#xywh=${x},${y},${thumbW},${thumbH}\n\n`
   }
   return vttString
 }
