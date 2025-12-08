@@ -82,6 +82,13 @@ const actions = {
       return
     }
 
+    // Ensure all profiles have pinnedChannels property (migration)
+    profiles.forEach(profile => {
+      if (!profile.pinnedChannels) {
+        profile.pinnedChannels = []
+      }
+    })
+
     // We want the primary profile to always be first
     // So sort with that then sort alphabetically by profile name
     profiles = profiles.sort(profileSort)
@@ -267,6 +274,11 @@ const mutations = {
       // use filter instead of splice in case the subscription appears multiple times
       // https://github.com/FreeTubeApp/FreeTube/pull/3468#discussion_r1179290877
       profile.subscriptions = profile.subscriptions.filter(channel => channel.id !== channelId)
+
+      // Also remove from pinned channels if present
+      if (profile.pinnedChannels) {
+        profile.pinnedChannels = profile.pinnedChannels.filter(id => id !== channelId)
+      }
     }
   },
 
