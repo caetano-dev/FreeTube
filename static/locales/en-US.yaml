@@ -604,7 +604,7 @@ Settings:
     Subscription File: Subscription File
     History File: History File
     Playlist File: Playlist File
-    Search history file: Search history file
+    Search history file: Search History File
     Settings File: Settings File
     Export Subscriptions: Export Subscriptions
     Export FreeTube: Export FreeTube
@@ -614,9 +614,9 @@ Settings:
     Export History: Export History
     Import Playlists: Import Playlists
     Export Playlists: Export Playlists
-    Search history: Search history
-    Import search history: Import search history
-    Export search history: Export search history
+    Search history: Search History
+    Import search history: Import Search History
+    Export search history: Export Search History
     Import Settings: Import Settings
     Export Settings: Export Settings
     Settings Tooltip: Settings that are OS/user-specific or experimental cannot be exported or imported (e.g., proxy, external player, screenshot folder...)
